@@ -1236,6 +1236,7 @@ protected:
 
   // Options
   bool    m_sackEnabled       {true}; //!< RFC SACK option enabled
+  
   bool    m_winScalingEnabled {true}; //!< Window Scale option enabled (RFC 7323)
   uint8_t m_rcvWindShift      {0};    //!< Window shift to apply to outgoing segments
   uint8_t m_sndWindShift      {0};    //!< Window shift to apply to incoming segments
@@ -1272,6 +1273,9 @@ protected:
   TracedValue<SequenceNumber32> m_ecnEchoSeq {0};      //!< Sequence number of the last received ECN Echo
   TracedValue<SequenceNumber32> m_ecnCESeq   {0};      //!< Sequence number of the last received Congestion Experienced
   TracedValue<SequenceNumber32> m_ecnCWRSeq  {0};      //!< Sequence number of the last sent CWR
+
+
+  bool    m_eifel             {false}; //!< Eifel disabled
 };
 
 /**

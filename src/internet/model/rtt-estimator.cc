@@ -30,6 +30,7 @@
 
 #include "rtt-estimator.h"
 #include "ns3/double.h"
+#include "ns3/boolean.h"
 #include "ns3/log.h"
 
 namespace ns3 {
@@ -143,7 +144,10 @@ RttMeanDeviation::GetTypeId (void)
                    DoubleValue (0.25),
                    MakeDoubleAccessor (&RttMeanDeviation::m_beta),
                    MakeDoubleChecker<double> (0, 1))
-  ;
+    .AddAttribute ("Eifel", "Enable or disable Eifel option",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&RttMeanDeviation::m_eifel),
+                   MakeBooleanChecker ());
   return tid;
 }
 
@@ -153,7 +157,7 @@ RttMeanDeviation::RttMeanDeviation()
 }
 
 RttMeanDeviation::RttMeanDeviation (const RttMeanDeviation& c)
-  : RttEstimator (c), m_alpha (c.m_alpha), m_beta (c.m_beta)
+  : RttEstimator (c), m_alpha (c.m_alpha), m_beta (c.m_beta)//, m_eifel (c.m_eifel)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -200,6 +204,7 @@ void
 RttMeanDeviation::FloatingPointUpdate (Time m)
 {
   NS_LOG_FUNCTION (this << m);
+  NS_LOG_INFO("ORDINARY  IN RTT ESTIMATOR");
 
   // EWMA formulas are implemented as suggested in
   // Jacobson/Karels paper appendix A.2
@@ -217,9 +222,40 @@ RttMeanDeviation::FloatingPointUpdate (Time m)
 }
 
 void
+RttMeanDeviation::FloatingPointUpdateEifel (Time m)
+{
+  NS_LOG_FUNCTION (this << m);
+  NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR");
+
+  // Eifel formula
+
+  //SRTT <- SRTT + GAIN * DELTA
+  double gain = 1/3.0;
+  Time err (m - m_estimatedRtt);
+  double gErr = err.ToDouble (Time::S) * gain;
+  m_estimatedRtt += Time::FromDouble (gErr, Time::S);
+
+  // RTTVAR <- (1 - beta) * RTTVAR + beta * |SRTT - R'|
+
+
+  Time difference = err - m_estimatedVariation;
+  
+  double n_gain = gain;
+  if(difference.ToDouble(Time::S) < 0)
+    n_gain = n_gain * n_gain;
+
+
+  if(err.GetInteger() >= 0)
+    m_estimatedVariation += Time::FromDouble (difference.ToDouble (Time::S) * n_gain, Time::S);
+
+  return;
+}
+
+void
 RttMeanDeviation::IntegerUpdate (Time m, uint32_t rttShift, uint32_t variationShift)
 {
   NS_LOG_FUNCTION (this << m << rttShift << variationShift);
+  NS_LOG_INFO("ORDINARY IN RTT ESTIMATOR");
   // Jacobson/Karels paper appendix A.2
   int64_t meas = m.GetInteger ();
   int64_t delta = meas - m_estimatedRtt.GetInteger ();
@@ -242,20 +278,29 @@ RttMeanDeviation::Measurement (Time m)
   NS_LOG_FUNCTION (this << m);
   if (m_nSamples)
     { 
-      // If both alpha and beta are reciprocal powers of two, updating can
-      // be done with integer arithmetic according to Jacobson/Karels paper.
-      // If not, since class Time only supports integer multiplication,
-      // must convert Time to floating point and back again
-      uint32_t rttShift = CheckForReciprocalPowerOfTwo (m_alpha);
-      uint32_t variationShift = CheckForReciprocalPowerOfTwo (m_beta);
-      if (rttShift && variationShift)
-        {
-          IntegerUpdate (m, rttShift, variationShift);
-        }
-      else
-        {
-          FloatingPointUpdate (m);
-        }
+      
+
+      if(m_eifel){
+          FloatingPointUpdateEifel(m);
+      }
+      else{
+
+        // If both alpha and beta are reciprocal powers of two, updating can
+        // be done with integer arithmetic according to Jacobson/Karels paper.
+        // If not, since class Time only supports integer multiplication,
+        // must convert Time to floating point and back again
+        uint32_t rttShift = CheckForReciprocalPowerOfTwo (m_alpha);
+        uint32_t variationShift = CheckForReciprocalPowerOfTwo (m_beta);
+        if (rttShift && variationShift)
+          {
+            IntegerUpdate (m, rttShift, variationShift);
+          }
+        else
+          {
+            FloatingPointUpdate (m);
+          }
+      }
+      
     }
   else
     { // First sample

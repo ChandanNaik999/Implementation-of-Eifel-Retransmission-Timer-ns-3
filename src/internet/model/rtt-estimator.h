@@ -183,6 +183,9 @@ private:
   void FloatingPointUpdate (Time m);
   double       m_alpha;       //!< Filter gain for average
   double       m_beta;        //!< Filter gain for variation
+  bool         m_eifel    {false};  //!<Eifel Disabled
+
+  void FloatingPointUpdateEifel (Time m);
 
 };
 

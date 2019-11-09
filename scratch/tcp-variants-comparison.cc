@@ -213,15 +213,18 @@ int main (int argc, char *argv[])
   std::string access_bandwidth = "10Mbps";
   std::string access_delay = "45ms";
   bool tracing = false;
+  bool justa = false;
+  bool eifel = false;
   std::string prefix_file_name = "TcpVariantsComparison";
   uint64_t data_mbytes = 0;
   uint32_t mtu_bytes = 400;
   uint16_t num_flows = 1;
-  double duration = 100.0;
+  double duration = 10.0;
   uint32_t run = 0;
   bool flow_monitor = false;
   bool pcap = false;
   bool sack = true;
+  
   std::string queue_disc_type = "ns3::PfifoFastQueueDisc";
   std::string recovery = "ns3::TcpClassicRecovery";
 
@@ -237,6 +240,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("access_bandwidth", "Access link bandwidth", access_bandwidth);
   cmd.AddValue ("access_delay", "Access link delay", access_delay);
   cmd.AddValue ("tracing", "Flag to enable/disable tracing", tracing);
+  cmd.AddValue ("justa", "Rto calculation algorithm type to use ", justa);
   cmd.AddValue ("prefix_name", "Prefix of output trace file", prefix_file_name);
   cmd.AddValue ("data", "Number of Megabytes of data to transmit", data_mbytes);
   cmd.AddValue ("mtu", "Size of IP packets to send in bytes", mtu_bytes);
@@ -248,6 +252,8 @@ int main (int argc, char *argv[])
   cmd.AddValue ("queue_disc_type", "Queue disc type for gateway (e.g. ns3::CoDelQueueDisc)", queue_disc_type);
   cmd.AddValue ("sack", "Enable or disable SACK option", sack);
   cmd.AddValue ("recovery", "Recovery algorithm type to use (e.g., ns3::TcpPrrRecovery", recovery);
+  cmd.AddValue ("eifel", "Rto calculation algorithm type to use ", eifel);
+  
   cmd.Parse (argc, argv);
 
   transport_prot = std::string ("ns3::") + transport_prot;
@@ -280,6 +286,12 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocket::RcvBufSize", UintegerValue (1 << 21));
   Config::SetDefault ("ns3::TcpSocket::SndBufSize", UintegerValue (1 << 21));
   Config::SetDefault ("ns3::TcpSocketBase::Sack", BooleanValue (sack));
+
+  if(eifel){
+    Config::SetDefault("ns3::TcpSocketBase::Eifel", BooleanValue(eifel));
+    Config::SetDefault("ns3::RttMeanDeviation::Eifel", BooleanValue(eifel));
+  }
+  
 
   Config::SetDefault ("ns3::TcpL4Protocol::RecoveryType",
                       TypeIdValue (TypeId::LookupByName (recovery)));
