@@ -13,8 +13,8 @@ Eifel retransmission timer is an alternative to the default Retransmission TimeO
 
 To simulate Eifel algorithm, the attribute eifel must be set to true, as shown below:
 
-`Config::SetDefault("ns3::TcpSocketBase::Eifel",BooleanValue(eifel));
-Config::SetDefault("ns3::RttMeanDeviation::Eifel",BooleanValue(eifel));`
+`Config::SetDefault("ns3::TcpSocketBase::Eifel",BooleanValue(true));
+'Config::SetDefault("ns3::RttMeanDeviation::Eifel",BooleanValue(true));`
 
 ### Eifel example
 
