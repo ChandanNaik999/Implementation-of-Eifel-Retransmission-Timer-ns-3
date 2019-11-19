@@ -248,6 +248,9 @@ public:
   TcpSocketBase (const TcpSocketBase& sock);
   virtual ~TcpSocketBase (void);
 
+  //calculate Gain for Eifel
+  
+
   // Set associated Node, TcpL4Protocol, RttEstimator to this socket
 
   /**
@@ -684,6 +687,9 @@ protected:
    * \param incomingInterface the incoming interface
    */
   void ForwardUp6 (Ptr<Packet> packet, Ipv6Header header, uint16_t port, Ptr<Ipv6Interface> incomingInterface);
+
+
+  double CalculateGain(void);
 
   /**
    * \brief Called by TcpSocketBase::ForwardUp{,6}().

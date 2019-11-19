@@ -41,6 +41,8 @@ NS_OBJECT_ENSURE_REGISTERED (RttEstimator);
 
 /// Tolerance used to check reciprocal of two numbers.
 static const double TOLERANCE = 1e-6;
+static  double m_gain = 0.0;
+
 
 TypeId 
 RttEstimator::GetTypeId (void)
@@ -121,6 +123,9 @@ RttEstimator::GetNSamples (void) const
   return m_nSamples;
 }
 
+
+
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // Mean-Deviation Estimator
@@ -144,12 +149,23 @@ RttMeanDeviation::GetTypeId (void)
                    DoubleValue (0.25),
                    MakeDoubleAccessor (&RttMeanDeviation::m_beta),
                    MakeDoubleChecker<double> (0, 1))
+    // .AddAttribute ("Gain",
+    //                "Gain used in estimating the RTT, in case Eifel",
+    //                DoubleValue (0.333),
+    //                MakeDoubleAccessor (&RttMeanDeviation::m_gain),
+    //                MakeDoubleChecker<double> (0, 1))
     .AddAttribute ("Eifel", "Enable or disable Eifel option",
                    BooleanValue (false),
                    MakeBooleanAccessor (&RttMeanDeviation::m_eifel),
                    MakeBooleanChecker ());
   return tid;
 }
+
+// void
+// RttEstimator::SetGain (double gain) 
+// {
+//   m_gain = gain;
+// }
 
 RttMeanDeviation::RttMeanDeviation()
 {
@@ -226,27 +242,28 @@ RttMeanDeviation::FloatingPointUpdateEifel (Time m)
 {
   NS_LOG_FUNCTION (this << m);
   NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR");
+  // NS_LOG_DEBUG ("Its eifel----------------------------------------------------------------------------------" << m_gain);
+
 
   // Eifel formula
 
   //SRTT <- SRTT + GAIN * DELTA
-  double gain = 1/3.0;
+  //double gain = 1/3.0;
   Time err (m - m_estimatedRtt);
-  double gErr = err.ToDouble (Time::S) * gain;
+  double gErr = err.ToDouble (Time::S) * m_gain;
   m_estimatedRtt += Time::FromDouble (gErr, Time::S);
 
   // RTTVAR <- (1 - beta) * RTTVAR + beta * |SRTT - R'|
 
-
   Time difference = err - m_estimatedVariation;
   
-  double n_gain = gain;
+  double c_gain = m_gain;
   if(difference.ToDouble(Time::S) < 0)
-    n_gain = n_gain * n_gain;
+    c_gain = c_gain * c_gain;
 
 
   if(err.GetInteger() >= 0)
-    m_estimatedVariation += Time::FromDouble (difference.ToDouble (Time::S) * n_gain, Time::S);
+    m_estimatedVariation += Time::FromDouble (difference.ToDouble (Time::S) * c_gain, Time::S);
 
   return;
 }
@@ -273,14 +290,17 @@ RttMeanDeviation::IntegerUpdate (Time m, uint32_t rttShift, uint32_t variationSh
 }
 
 void 
-RttMeanDeviation::Measurement (Time m)
+RttMeanDeviation::Measurement (Time m, double gain)
 {
   NS_LOG_FUNCTION (this << m);
+  
   if (m_nSamples)
     { 
       
-
+NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR");
       if(m_eifel){
+          m_gain = gain;
+
           FloatingPointUpdateEifel(m);
       }
       else{

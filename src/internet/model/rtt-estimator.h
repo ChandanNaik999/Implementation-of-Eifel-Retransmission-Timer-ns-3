@@ -63,7 +63,9 @@ public:
    * \brief Add a new measurement to the estimator. Pure virtual function.
    * \param t the new RTT measure.
    */
-  virtual void  Measurement (Time t) = 0;
+  virtual void  Measurement (Time t, double gain) = 0;
+
+  // virtual void SetGain (double gain) = 0;
 
   /**
    * \brief Copy object (including current internal state)
@@ -142,7 +144,9 @@ public:
    * \brief Add a new measurement to the estimator.
    * \param measure the new RTT measure.
    */
-  void Measurement (Time measure);
+  void Measurement (Time measure, double gain);
+
+  // void SetGain (double gain);
 
   Ptr<RttEstimator> Copy () const;
 
@@ -184,8 +188,10 @@ private:
   double       m_alpha;       //!< Filter gain for average
   double       m_beta;        //!< Filter gain for variation
   bool         m_eifel    {false};  //!<Eifel Disabled
+  // double       m_gain; 
 
   void FloatingPointUpdateEifel (Time m);
+      
 
 };
 

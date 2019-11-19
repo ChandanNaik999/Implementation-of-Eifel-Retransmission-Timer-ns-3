@@ -43,6 +43,7 @@
 #include "ns3/trace-source-accessor.h"
 #include "ns3/data-rate.h"
 #include "ns3/object.h"
+#include "ns3/config.h"
 #include "tcp-socket-base.h"
 #include "tcp-l4-protocol.h"
 #include "ipv4-end-point.h"
@@ -59,6 +60,7 @@
 #include "tcp-congestion-ops.h"
 #include "tcp-recovery-ops.h"
 
+
 #include <math.h>
 #include <algorithm>
 
@@ -69,6 +71,7 @@ NS_LOG_COMPONENT_DEFINE ("TcpSocketBase");
 NS_OBJECT_ENSURE_REGISTERED (TcpSocketBase);
 
 Time lastRtt = Time (0.0);
+// double gain = 0;
 
 TypeId
 TcpSocketBase::GetTypeId (void)
@@ -485,6 +488,24 @@ Ptr<Node>
 TcpSocketBase::GetNode (void) const
 {
   return m_node;
+}
+
+double TcpSocketBase::CalculateGain(void){
+  // return 1/3.0;
+  double gain = 0.333;
+  double rttSamplingRate = 2.0;//UnUnAckDataCount();
+ // we need to calculate sampling rate
+  if (rttSamplingRate == 1.0){
+    gain  =  (1.0/BytesInFlight());
+  }
+  else if(rttSamplingRate == 0.5){
+    gain =  (2.0/BytesInFlight());
+  }
+  else {
+    gain =  1/3.0;
+  }
+   
+   return gain;
 }
 
 /* Inherit from Socket class: Bind socket to an end-point in TcpL4Protocol */
@@ -2427,7 +2448,7 @@ TcpSocketBase::DoPeerClose (void)
     {
       Time lastRto;
       if(m_eifel){
-        lastRto = Max(m_rtt->GetEstimate () + m_rtt->GetVariation () * 3, lastRtt + 2*m_clockGranularity);        
+        lastRto = Max(m_rtt->GetEstimate () +(Time::FromDouble (m_rtt->GetVariation ().ToDouble (Time::S) / CalculateGain(), Time::S)), lastRtt + 2*m_clockGranularity);        
         NS_LOG_INFO("Its eifel----------------------------------------------------------------------------------");
       }
       else{
@@ -2517,7 +2538,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
 
   // RFC 6298, clause 2.4
   if(m_eifel){
-    m_rto = Max(m_rtt->GetEstimate () + m_rtt->GetVariation () * 3, lastRtt + 2*m_clockGranularity);
+    m_rto = Max(m_rtt->GetEstimate () +(Time::FromDouble (m_rtt->GetVariation ().ToDouble (Time::S) / CalculateGain(), Time::S)), lastRtt + 2*m_clockGranularity); 
     NS_LOG_INFO("Its eifel----------------------------------------------------------------------------------");
   }
   else{
@@ -3382,14 +3403,20 @@ TcpSocketBase::EstimateRtt (const TcpHeader& tcpHeader)
 
   if (!m.IsZero ())
     {
-      m_rtt->Measurement (m);                // Log the measurement
+      // if(m_eifel){
+      //   // m_rtt->SetGain(CalculateGain());
+      //   //Config::SetDefault("ns3::RttMeanDeviation::Gain", DoubleValue(CalculateGain()));
+      // }
+      // Log the measurement
       // RFC 6298, clause 2.4
       if(m_eifel){
-        m_rto = Max(m_rtt->GetEstimate () + m_rtt->GetVariation () * 3, m + 2*m_clockGranularity);
+        m_rtt->Measurement (m, CalculateGain());
+        m_rto = Max(m_rtt->GetEstimate () +(Time::FromDouble (m_rtt->GetVariation ().ToDouble (Time::S) / CalculateGain(), Time::S)), lastRtt + 2*m_clockGranularity);  
         lastRtt = m;
         NS_LOG_INFO("Its eifel----------------------------------------------------------------------------------");
       }
       else{
+        m_rtt->Measurement (m, 0.0);
         m_rto = Max (m_rtt->GetEstimate () + Max (m_clockGranularity, m_rtt->GetVariation () * 4), m_minRto);
         NS_LOG_INFO("Not eifel----------------------------------------------------------------------------------");
       }
@@ -3420,7 +3447,7 @@ TcpSocketBase::NewAck (SequenceNumber32 const& ack, bool resetRTO)
       // On receiving a "New" ack we restart retransmission timer .. RFC 6298
       // RFC 6298, clause 2.4
       if(m_eifel){
-        m_rto = Max(m_rtt->GetEstimate () + m_rtt->GetVariation () * 3, lastRtt + 2 * m_clockGranularity);
+        m_rto = Max(m_rtt->GetEstimate () +(Time::FromDouble (m_rtt->GetVariation ().ToDouble (Time::S) / CalculateGain(), Time::S)), lastRtt + 2*m_clockGranularity); 
         NS_LOG_INFO("Its eifel----------------------------------------------------------------------------------");
       }
       else{
