@@ -223,7 +223,7 @@ int main (int argc, char *argv[])
   uint32_t run = 0;
   bool flow_monitor = false;
   bool pcap = false;
-  bool sack = true;
+  bool sack = false;
   
   std::string queue_disc_type = "ns3::PfifoFastQueueDisc";
   std::string recovery = "ns3::TcpClassicRecovery";
@@ -290,6 +290,7 @@ int main (int argc, char *argv[])
   if(eifel){
     Config::SetDefault("ns3::TcpSocketBase::Eifel", BooleanValue(eifel));
     Config::SetDefault("ns3::RttMeanDeviation::Eifel", BooleanValue(eifel));
+    // Config::SetDefault("ns3::TcpSocketBase::Timestamp", BooleanValue(eifel));
   }
   
 
@@ -428,12 +429,12 @@ int main (int argc, char *argv[])
                                             std::ios::out);
       stack.EnableAsciiIpv4All (ascii_wrap);
 
-      Simulator::Schedule (Seconds (0.00001), &TraceCwnd, prefix_file_name + "-cwnd.data");
-      Simulator::Schedule (Seconds (0.00001), &TraceSsThresh, prefix_file_name + "-ssth.data");
-      Simulator::Schedule (Seconds (0.00001), &TraceRtt, prefix_file_name + "-rtt.data");
-      Simulator::Schedule (Seconds (0.00001), &TraceRto, prefix_file_name + "-rto.data");
-      Simulator::Schedule (Seconds (0.00001), &TraceNextTx, prefix_file_name + "-next-tx.data");
-      Simulator::Schedule (Seconds (0.00001), &TraceInFlight, prefix_file_name + "-inflight.data");
+      Simulator::Schedule (Seconds (0.1), &TraceCwnd, prefix_file_name + "-cwnd.data");
+      Simulator::Schedule (Seconds (0.1), &TraceSsThresh, prefix_file_name + "-ssth.data");
+      Simulator::Schedule (Seconds (0.1), &TraceRtt, prefix_file_name + "-rtt.data");
+      Simulator::Schedule (Seconds (0.1), &TraceRto, prefix_file_name + "-rto.data");
+      Simulator::Schedule (Seconds (0.1), &TraceNextTx, prefix_file_name + "-next-tx.data");
+      Simulator::Schedule (Seconds (0.1), &TraceInFlight, prefix_file_name + "-inflight.data");
       Simulator::Schedule (Seconds (0.1), &TraceNextRx, prefix_file_name + "-next-rx.data");
     }
 

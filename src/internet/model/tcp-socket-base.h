@@ -1198,7 +1198,7 @@ protected:
 
   // Timeouts
   TracedValue<Time> m_rto     {Seconds (0.0)}; //!< Retransmit timeout
-  Time              m_minRto  {Time::Max ()};   //!< minimum value of the Retransmit timeout
+  Time              m_minRto  {Seconds (0.0)};//Time::Max ()};   //!< minimum value of the Retransmit timeout
   Time              m_clockGranularity {Seconds (0.001)}; //!< Clock Granularity used in RTO calcs
   Time              m_delAckTimeout    {Seconds (0.0)};   //!< Time to delay an ACK
   Time              m_persistTimeout   {Seconds (0.0)};   //!< Time between sending 1-byte probes

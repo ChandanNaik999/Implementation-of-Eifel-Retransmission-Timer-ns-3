@@ -492,14 +492,33 @@ TcpSocketBase::GetNode (void) const
 
 double TcpSocketBase::CalculateGain(void){
   // return 1/3.0;
-  double gain = 0.333;
-  double rttSamplingRate = 2.0;//UnUnAckDataCount();
- // we need to calculate sampling rate
+  double gain;
+  double rttSamplingRate = 0.5;
+
+  
+  // we need to calculate sampling rate
+  // actual calculation of flight is Max(cwnd/2, ssThresh) + 1, but since ssThresh is set to infinity in ns3
+  // it is better to take only cwnd/2 + 1
+
+  //  actual
+  // if( m_tcb->m_cWnd/2.0 < m_tcb->m_ssThresh)
+  //   flight = m_tcb->m_ssThresh + 1;
+  // else
+  //   flight = m_tcb->m_cWnd/2.0 + 1; 
+
+
+  uint32_t flight = m_tcb->m_cWnd/2.0 + 1; 
+  
+
+
+  NS_LOG_INFO("flight: " << flight <<" ssthresh: "<< m_tcb->m_ssThresh << " cwnd/2: "<< m_tcb->m_cWnd/2.0 << "   qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" );
+
+
   if (rttSamplingRate == 1.0){
-    gain  =  (1.0/BytesInFlight());
+    gain  =  (1.0/flight);
   }
   else if(rttSamplingRate == 0.5){
-    gain =  (2.0/BytesInFlight());
+    gain =  (2.0/flight);
   }
   else {
     gain =  1/3.0;
@@ -2543,7 +2562,7 @@ TcpSocketBase::SendEmptyPacket (uint8_t flags)
   }
   else{
     m_rto = Max (m_rtt->GetEstimate () + Max (m_clockGranularity, m_rtt->GetVariation () * 4), m_minRto);
-    NS_LOG_INFO("Not eifel----------------------------------------------------------------------------------");
+    NS_LOG_INFO("Not eifel----------------------------------------------------------------------------------" << m_clockGranularity);
   }
   
 
@@ -3411,8 +3430,9 @@ TcpSocketBase::EstimateRtt (const TcpHeader& tcpHeader)
       // RFC 6298, clause 2.4
       if(m_eifel){
         m_rtt->Measurement (m, CalculateGain());
-        m_rto = Max(m_rtt->GetEstimate () +(Time::FromDouble (m_rtt->GetVariation ().ToDouble (Time::S) / CalculateGain(), Time::S)), lastRtt + 2*m_clockGranularity);  
         lastRtt = m;
+        m_rto = Max(m_rtt->GetEstimate () +(Time::FromDouble (m_rtt->GetVariation ().ToDouble (Time::S) / CalculateGain(), Time::S)), lastRtt + 2*m_clockGranularity);  
+        
         NS_LOG_INFO("Its eifel----------------------------------------------------------------------------------");
       }
       else{

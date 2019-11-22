@@ -77,14 +77,14 @@ RttEstimator::GetVariation (void) const
 RttEstimator::RttEstimator ()
   : m_nSamples (0)
 { 
-  NS_LOG_FUNCTION (this);
+  // NS_LOG_FUNCTION (this);
   
   // We need attributes initialized here, not later, so use the 
   // ConstructSelf() technique documented in the manual
   ObjectBase::ConstructSelf (AttributeConstructionList ());
   m_estimatedRtt = m_initialEstimatedRtt;
   m_estimatedVariation = Time (0);
-  NS_LOG_DEBUG ("Initialize m_estimatedRtt to " << m_estimatedRtt.GetSeconds () << " sec.");
+  // NS_LOG_DEBUG ("Initialize m_estimatedRtt to " << m_estimatedRtt.GetSeconds () << " sec.");
 }
 
 RttEstimator::RttEstimator (const RttEstimator& c)
@@ -240,28 +240,25 @@ RttMeanDeviation::FloatingPointUpdate (Time m)
 void
 RttMeanDeviation::FloatingPointUpdateEifel (Time m)
 {
-  NS_LOG_FUNCTION (this << m);
-  NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR");
-  // NS_LOG_DEBUG ("Its eifel----------------------------------------------------------------------------------" << m_gain);
-
+  // NS_LOG_FUNCTION (this << m);
+  // NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR=========================================================="<< m_gain);
 
   // Eifel formula
 
-  //SRTT <- SRTT + GAIN * DELTA
-  //double gain = 1/3.0;
+  //DELTA  =  SampleRTT - SRTT
   Time err (m - m_estimatedRtt);
-  double gErr = err.ToDouble (Time::S) * m_gain;
-  m_estimatedRtt += Time::FromDouble (gErr, Time::S);
 
-  // RTTVAR <- (1 - beta) * RTTVAR + beta * |SRTT - R'|
-
+  //gain complement
   Time difference = err - m_estimatedVariation;
-  
   double c_gain = m_gain;
   if(difference.ToDouble(Time::S) < 0)
     c_gain = c_gain * c_gain;
 
+  //SRTT = SRTT + GAIN * DELTA
+  double gErr = err.ToDouble (Time::S) * m_gain;
+  m_estimatedRtt += Time::FromDouble (gErr, Time::S);
 
+  //RTTVAR = 
   if(err.GetInteger() >= 0)
     m_estimatedVariation += Time::FromDouble (difference.ToDouble (Time::S) * c_gain, Time::S);
 
@@ -292,19 +289,19 @@ RttMeanDeviation::IntegerUpdate (Time m, uint32_t rttShift, uint32_t variationSh
 void 
 RttMeanDeviation::Measurement (Time m, double gain)
 {
-  NS_LOG_FUNCTION (this << m);
+  // NS_LOG_FUNCTION (this << m);
   
   if (m_nSamples)
     { 
       
-NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR");
+NS_LOG_INFO("ITS EIFFEL IN RTT ESTIMATOR, SAMPLE NO: "<< m_nSamples<< "  RTT:  "<< m<< " ===============================");
       if(m_eifel){
           m_gain = gain;
 
           FloatingPointUpdateEifel(m);
       }
       else{
-
+        
         // If both alpha and beta are reciprocal powers of two, updating can
         // be done with integer arithmetic according to Jacobson/Karels paper.
         // If not, since class Time only supports integer multiplication,
