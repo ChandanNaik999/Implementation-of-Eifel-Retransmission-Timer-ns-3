@@ -27,16 +27,14 @@ and should be executed as
 
 `./waf --run "scratch/tcp-variants-comparison -tracing=true -eifel=true -duration=10"`
 
-
-The following files are generated when the above command is executed
-
-`TcpVariantsComparison-rto.data`
-`TcpVariantsComparison-rtt.data`
-`TcpVariantsComparison-cwnd.data`
-`TcpVariantsComparison-ssth.data`
-`TcpVariantsComparison-next-tx.data`
-`TcpVariantsComparison-next-rx.data`
-`TcpVariantsComparison-inflight.data`
+The following files are generated when the above command is executed.
+* `TcpVariantsComparison-rto.data`
+* `TcpVariantsComparison-rtt.data`
+* `TcpVariantsComparison-cwnd.data`
+* `TcpVariantsComparison-ssth.data`
+* `TcpVariantsComparison-next-tx.data`
+* `TcpVariantsComparison-next-rx.data`
+* `TcpVariantsComparison-inflight.data`
 
 ### Gnuplot
 
