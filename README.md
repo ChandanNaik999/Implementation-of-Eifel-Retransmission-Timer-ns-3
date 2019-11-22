@@ -37,6 +37,14 @@ The following files are generated when the above command is executed.
 * `TcpVariantsComparison-inflight.data`
 
 ### Gnuplot
+The data files can be plot using Gnuplot.
+
+`plot "TcpVariantsComparison-rtt.data" with lines title "rtt-eifel", "TcpVariantsComparison-rto.data" with lines title "rto-eifel"`
+
+The xrange and yrange can be changed using the following commands:
+
+`set yrange[0.09:0.0927]`\
+`set xrange[0:10]`
 
 
 ### References:
